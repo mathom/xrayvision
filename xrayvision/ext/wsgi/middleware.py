@@ -1,7 +1,7 @@
 from xrayvision import global_segment
 
 
-class XrayMiddleware(object):
+class XRayMiddleware(object):
     '''Wrap a WSGI app to provide Xray stats'''
 
     def __init__(self, app, name=None):
