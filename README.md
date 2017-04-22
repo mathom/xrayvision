@@ -1,5 +1,4 @@
-# xrayvisio
-
+# xrayvision
 Utilities and wrappers for using [AWS X-Ray](https://aws.amazon.com/xray/) with Python
 
 ## WSGI Apps
