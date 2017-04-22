@@ -24,3 +24,13 @@ with global_segment.add_subsegment('my custom loop') as segment:
     except:
         segment.add_exception()
 ```
+
+## Requests
+
+Requests must be patched as early as possible in your code.
+```python
+import requests
+import xrayvision
+
+xrayvision.patch('requests')
+```
