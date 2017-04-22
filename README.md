@@ -1,4 +1,4 @@
-# xrayvision
+# xrayvisio
 
 Utilities and wrappers for using [AWS X-Ray](https://aws.amazon.com/xray/) with Python
 
@@ -9,7 +9,7 @@ Simply add the middleware to your app. For example, if you use Flask:
 from xrayvision.ext.wsgi import XRayMiddleware
 
 app = Flask(__name__)
-app.wsgi_app = XRayMiddleWare(app.wsgi_app)
+app.wsgi_app = XRayMiddleware(app.wsgi_app)
 ```
 
 You can add subsegments with the `global_segment`:
