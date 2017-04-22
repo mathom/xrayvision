@@ -21,13 +21,13 @@ class XRayMiddleware(object):
 
         if trace_id:
             for entry in trace_id.split(';'):
-                name, val = entry.split('=')
-                name = name.lower()
-                if name == 'sampled':
+                key, val = entry.split('=')
+                key = name.lower()
+                if key == 'sampled':
                     sampled = val
-                elif name == 'root':
+                elif key == 'root':
                     trace_root = val
-                elif name == 'parent':
+                elif key == 'parent':
                     trace_parent = val
 
         trace = global_segment.begin(name, trace_root, trace_parent)
