@@ -6,7 +6,8 @@ Utilities and wrappers for using [AWS X-Ray](https://aws.amazon.com/xray/) with 
 
 Simply add the middleware to your app. For example, if you use Flask:
 ```python
-from xrayvision.ext import XRayMiddleware
+from xrayvision.ext.wsgi import XRayMiddleware
+
 app = Flask(__name__)
 app.wsgi_app = XRayMiddleWare(app.wsgi_app)
 ```
