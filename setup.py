@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import re
 
 def extract_version(filename):
@@ -15,7 +15,7 @@ setup(
     version=version,
     author='Matthew Thompson',
     author_email='matt@britecore.com',
-    packages=['xrayvision'],
+    packages=find_packages(),
     url='https://github.com/IntuitiveWebSolutions/xrayvision',
     license='LICENSE.txt',
     description='AWS X-Ray tracing for python',
