@@ -1,4 +1,4 @@
-from xrayvision.trace import TraceSegment
+from xrayvision import global_segment
 
 
 class XrayMiddleware(object):
@@ -11,16 +11,15 @@ class XrayMiddleware(object):
     def __call__(self, environ, start_response):
         '''Call the app handler'''
 
-        print environ
-        path_info = environ['PATH_INFO']
         trace_id = environ.get('HTTP_X_AMZN_TRACE_ID')
         trace_root = None
         trace_parent = None
         sampled = None
 
-        name = self.name or environ['SCRIPT_NAME'] or environ['SERVER_SOFTWARE']
+        name = (self.name or environ.get('SCRIPT_NAME')
+                or environ.get('SERVER_SOFTWARE') or 'wsgi')
 
-        trace = TraceSegment(name, trace_root)
+        trace = global_segment.begin(name, trace_root)
 
         if trace_id:
             for entry in trace_id.split(';'):
@@ -38,13 +37,56 @@ class XrayMiddleware(object):
         elif sampled == '0':
             trace.sampled = False
 
+        url = '{0}://{1}{2}'.format(environ['wsgi.url_scheme'],
+                                    environ['HTTP_HOST'],
+                                    environ['PATH_INFO'])
+
+        if environ.get('QUERY_STRING'):
+            url += '?' + environ['QUERY_STRING']
+
+        http = {
+            'request': {
+                'method': environ['REQUEST_METHOD'],
+                'url': url,
+                'user_agent': environ['HTTP_USER_AGENT'],
+                'client_ip': environ['REMOTE_ADDR']
+            }
+        }
+
+        trace.http = http
+
+        # record header stuff in metadata
+        for name, value in environ.items():
+            if name.startswith('HTTP_'):
+                trace.add_metadata(name, value)
+
+        trace.add_annotation('server_protocol', environ['SERVER_PROTOCOL'])
+
+        # helper to capture response information
+        def _start_response(status, headers):
+            http.setdefault('response', {})
+            response = http['response']
+
+            response['status'] = int(status.split()[0])
+            hdict = {x[0]: x[1] for x in headers}
+            if 'Content-Length' in hdict:
+                response['content_length'] = int(hdict['Content-Length'])
+
+            return start_response(status, headers)
+
+        if environ.get('HTTP_X_FORWARDED_FOR'):
+            http['request']['x_forwarded_for'] = environ['HTTP_X_FORWARDED_FOR']
+
         try:
-            app_iter = self.app(environ, start_response)
+            app_iter = self.app(environ, _start_response)
             for item in app_iter:
                 yield item
 
+            status = http.get('response', {}).get('status', 0)
+            trace.add_http_status(status)
+
         except:
-            # TODO: record this exception
+            trace.add_exception()
             raise
 
         finally:
