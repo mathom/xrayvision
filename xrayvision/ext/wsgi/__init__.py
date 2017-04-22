@@ -1,3 +1,3 @@
-from middleware import XrayMiddleware
+from middleware import XRayMiddleware
 
-__all__=['XrayMiddleware']
+__all__=['XRayMiddleware']

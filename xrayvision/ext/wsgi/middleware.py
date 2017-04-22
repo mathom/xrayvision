@@ -19,8 +19,6 @@ class XRayMiddleware(object):
         name = (self.name or environ.get('SCRIPT_NAME')
                 or environ.get('SERVER_SOFTWARE') or 'wsgi')
 
-        trace = global_segment.begin(name, trace_root)
-
         if trace_id:
             for entry in trace_id.split(';'):
                 name, val = entry.split('=')
@@ -31,6 +29,8 @@ class XRayMiddleware(object):
                     trace_root = val
                 elif name == 'parent':
                     trace_parent = val
+
+        trace = global_segment.begin(name, trace_root, trace_parent)
 
         if sampled == '1':
             trace.sampled = True

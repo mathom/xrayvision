@@ -41,7 +41,7 @@ def get_current_exception():
 
     result = {
         'id': random_64bit_id(),
-        'message': value.message,
+        'message': str(value),
         'type': etype.__name__,
         'stack': []
     }
@@ -68,11 +68,13 @@ class TraceSegment(object):
     A global instance of the root segment is already created for you in xrayvision.
     '''
 
-    def __init__(self):
+    def __init__(self, subsegment=False):
         self.closed = False
-        self.is_subsegment = False
+        self.is_subsegment = subsegment
 
     def begin(self, name, trace_id=None, parent_id=None):
+        self.closed = False
+
         self._id = random_64bit_id()
         self.name = name
         self.trace_id = trace_id
@@ -81,13 +83,13 @@ class TraceSegment(object):
         self.start_time = time.time()
         self.end_time = None
 
-        self.closed = False
         self.sampled = None
 
         self.error = None
         self.throttle = None
         self.fault = None
         self.cause = None
+        self.namespace = None
 
         self.http = {}
 
@@ -101,6 +103,13 @@ class TraceSegment(object):
         if not self.trace_id:
             self.trace_id = self.random_trace_id()
 
+        if self.is_subsegment:
+            logger.debug('Adding new subsegment %s %s to %s',
+                         name, self._id, self.parent_id)
+        else:
+            logger.debug('Created new TraceSegment %s %s %s',
+                         name, self._id, self.trace_id)
+
         return self
 
     def random_trace_id(self):
@@ -109,7 +118,7 @@ class TraceSegment(object):
 
     def add_subsegment(self, name):
         '''Create and begin a new subsegment that is nested inside this segment'''
-        subsegment = TraceSegment()
+        subsegment = TraceSegment(True)
         self.subsegments.append(subsegment)
         return subsegment.begin(name, trace_id=self.trace_id, parent_id=self._id)
 
@@ -118,7 +127,7 @@ class TraceSegment(object):
         if self.closed:
             raise TraceException('TraceSegment already closed, cannot use it again')
 
-        return self.begin(*args, **kwargs)
+        return self
 
     def __exit__(self, *args):
         # TODO: capture exceptions here?
@@ -131,7 +140,8 @@ class TraceSegment(object):
         self.closed = True
         self.end_time = time.time()
 
-        self.submit()
+        if not self.is_subsegment:
+            self.submit()
 
     def is_sampled(self):
         # TODO implement sampling algorithm here
@@ -176,7 +186,7 @@ class TraceSegment(object):
         exception = get_current_exception()
         if exception:
             self.cause['working_directory'] = os.getcwd()
-            self.cause['paths'] = get_loaded_modules()
+            #self.cause['paths'] = get_loaded_modules()
             self.cause.setdefault('exceptions', [])
             self.cause['exceptions'].append(get_current_exception())
 
@@ -197,6 +207,7 @@ class TraceSegment(object):
             'fault',
             'http',
             'metadata',
+            'namespace',
             'parent_id',
             'throttle',
         )
@@ -205,15 +216,15 @@ class TraceSegment(object):
             if getattr(self, field) is not None:
                 result[field] = getattr(self, field)
 
+        if self.subsegments:
+            result['subsegments'] = [x.get_document() for x in self.subsegments]
+
         return result
 
     def get_segments(self):
         segments = []
 
         segments.append(json.dumps(self.get_document()))
-
-        segments.extend(json_dumps(x.get_document())
-                        for x in self.subsegments)
 
         return segments
 

@@ -28,7 +28,7 @@ def patch(module_name):
     if is_patched(module_name):
         return
 
-    patch_path = 'xrayvision.patches.{0}.patch'.format(module_name)
+    patch_path = 'xrayvision.patches.{0}'.format(module_name)
 
     try:
         patcher = importlib.import_module(patch_path)
@@ -37,7 +37,7 @@ def patch(module_name):
         logging.exception(message)
         raise PatchException(message)
 
-    patcher()
+    patcher.patch()
 
     if not is_patched(module_name):
         raise PatchException('{0} was not patched successfully'.format(module_name))
