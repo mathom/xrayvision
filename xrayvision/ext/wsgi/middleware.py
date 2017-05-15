@@ -11,7 +11,7 @@ class XRayMiddleware(object):
     def __call__(self, environ, start_response):
         '''Call the app handler'''
 
-        trace_id = environ.get('_X_AMZN_TRACE_ID')
+        trace_id = environ.get('HTTP_X_AMZN_TRACE_ID')
         trace_root = None
         trace_parent = None
         sampled = None
