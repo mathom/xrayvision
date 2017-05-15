@@ -11,7 +11,7 @@ class XRayMiddleware(object):
     def __call__(self, environ, start_response):
         '''Call the app handler'''
 
-        trace_id = environ.get('HTTP_X_AMZN_TRACE_ID')
+        trace_id = environ.get('_X_AMZN_TRACE_ID')
         trace_root = None
         trace_parent = None
         sampled = None
@@ -22,12 +22,11 @@ class XRayMiddleware(object):
         if trace_id:
             for entry in trace_id.split(';'):
                 key, val = entry.split('=')
-                key = name.lower()
-                if key == 'sampled':
+                if key == 'Sampled':
                     sampled = val
-                elif key == 'root':
+                elif key == 'Root':
                     trace_root = val
-                elif key == 'parent':
+                elif key == 'Parent':
                     trace_parent = val
 
         trace = global_segment.begin(name, trace_root, trace_parent)
