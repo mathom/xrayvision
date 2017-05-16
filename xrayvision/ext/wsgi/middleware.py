@@ -1,4 +1,4 @@
-from xrayvision import global_segment
+from xrayvision import global_segment, get_trace_info, parse_trace_info
 
 
 class XRayMiddleware(object):
@@ -16,19 +16,14 @@ class XRayMiddleware(object):
         trace_parent = None
         sampled = None
 
+        # in lambda, this will be sourced from the environment
+        trace_root, trace_parent, sampled = get_trace_info()
+
+        if not trace_root:
+            trace_root, trace_parent, sampled = parse_trace_info(trace_id)
+
         name = (self.name or environ.get('SCRIPT_NAME')
                 or environ.get('SERVER_SOFTWARE') or 'wsgi')
-
-        if trace_id:
-            for entry in trace_id.split(';'):
-                key, val = entry.split('=')
-                key = name.lower()
-                if key == 'sampled':
-                    sampled = val
-                elif key == 'root':
-                    trace_root = val
-                elif key == 'parent':
-                    trace_parent = val
 
         trace = global_segment.begin(name, trace_root, trace_parent)
 

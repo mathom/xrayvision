@@ -58,6 +58,34 @@ def get_current_exception():
     return result
 
 
+def parse_trace_info(trace_value):
+    '''Parse the keys out of an xray trace string and return (root, parent, sampled) tuple.'''
+    trace_root = None
+    trace_parent = None
+    sampled = None
+
+    if trace_value:
+        for entry in trace_value.split(';'):
+            key, val = entry.split('=')
+            if key == 'Sampled':
+                sampled = val
+            elif key == 'Root':
+                trace_root = val
+            elif key == 'Parent':
+                trace_parent = val
+
+    return (trace_root, trace_parent, sampled)
+
+
+def get_trace_info():
+    '''Return a tuple of (root, parent, sampled) if found in the environment.'''
+
+    if '_X_AMZN_TRACE_ID' in os.environ:
+        return parse_trace_info(os.environ['_X_AMZN_TRACE_ID'])
+    else:
+        return (None, None, None)
+
+
 class TraceSegment(object):
     '''
     Trace segments are spans of time that are used to
