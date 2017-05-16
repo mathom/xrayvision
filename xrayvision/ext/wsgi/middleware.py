@@ -4,9 +4,10 @@ from xrayvision import global_segment, get_trace_info, parse_trace_info
 class XRayMiddleware(object):
     '''Wrap a WSGI app to provide Xray stats'''
 
-    def __init__(self, app, name=None):
+    def __init__(self, app, name=None, prefer_lambda_trace=False):
         self.app = app
         self.name = name
+        self.prefer_lambda_trace = prefer_lambda_trace
 
     def __call__(self, environ, start_response):
         '''Call the app handler'''
@@ -17,7 +18,8 @@ class XRayMiddleware(object):
         sampled = None
 
         # in lambda, this will be sourced from the environment
-        trace_root, trace_parent, sampled = get_trace_info()
+        if self.prefer_lambda_trace:
+            trace_root, trace_parent, sampled = get_trace_info()
 
         if not trace_root:
             trace_root, trace_parent, sampled = parse_trace_info(trace_id)
