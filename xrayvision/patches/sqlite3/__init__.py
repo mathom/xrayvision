@@ -1,6 +1,7 @@
 '''
 Wrap some important functions in sqlite3 so we can instrument them.
 '''
+import sqlite3
 
 from xrayvision.monkeypatch import mark_patched, is_patched
 
