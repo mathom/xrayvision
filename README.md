@@ -1,4 +1,9 @@
+# NOTE
+
+AWS has released the beta version of their Python X-ray SDK - check it out here: https://aws.amazon.com/about-aws/whats-new/2017/08/aws-x-ray-sdk-for-python-beta/
+
 # xrayvision
+
 Utilities and wrappers for using [AWS X-Ray](https://aws.amazon.com/xray/) with Python
 
 ## WSGI Apps
